@@ -1,0 +1,5 @@
+accelerate
+gradio
+numpy
+transformers
+trimesh
