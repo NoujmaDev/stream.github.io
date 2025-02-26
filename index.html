@@ -4,34 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zakia - Chat avec LLM</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Lien pour Font Awesome -->
   <style>
+    /* Styles globaux */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
       background-color: #f4f4f9;
       color: #333;
+      transition: background-color 0.3s, color 0.3s;
     }
     .dark-mode {
       background-color: #1a1a1a;
       color: #f1f1f1;
     }
+
+    /* Layout principal */
     .container {
       display: flex;
       height: 100vh;
     }
+
+    /* Barre latérale */
     .sidebar {
       width: 250px;
       background: #f7f7f7;
+      color: #333;
       padding: 20px;
       display: flex;
       flex-direction: column;
       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+    }
+    .sidebar.hidden {
+      transform: translateX(-100%);
     }
     .sidebar h2 {
       text-align: center;
       margin-bottom: 20px;
+      font-size: 20px;
     }
     .sidebar ul {
       list-style: none;
@@ -48,6 +60,8 @@
     .sidebar ul li:hover {
       background: #c0c0c0;
     }
+
+    /* Menu rétractable */
     .menu-toggle {
       background: #007bff;
       color: #fff;
@@ -59,34 +73,76 @@
       position: absolute;
       top: 20px;
       left: 20px;
+      z-index: 1000;
     }
+
+    /* Zone de chat */
     .chat-container {
       flex: 1;
       display: flex;
       flex-direction: column;
       padding: 40px 30px;
+      overflow: hidden;
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 20px;
     }
+    .header h1 {
+      margin: 0;
+      font-size: 32px;
+    }
+    .dark-mode-toggle {
+      cursor: pointer;
+      font-size: 20px;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    .dark-mode .dark-mode-toggle {
+      background-color: #333;
+      color: #f1f1f1;
+    }
+
     .messages {
       flex: 1;
       overflow-y: auto;
+      margin-bottom: 20px;
       padding: 20px;
       border: 1px solid #ccc;
       border-radius: 5px;
       background: #f9f9f9;
-      height: calc(100vh - 220px);
-      display: flex;
-      flex-direction: column-reverse; /* Nouveauté : messages du plus récent au plus ancien */
+      height: calc(100vh - 220px); /* Ajuster la taille du chat */
     }
+    .dark-mode .messages {
+      background: #2c2c2c;
+      border-color: #444;
+    }
+
+    /* Bulles de message */
     .message {
       margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
       padding: 10px;
       border-radius: 25px;
       max-width: 70%;
+    }
+    .dark-mode .message {
+      color: #f1f1f1;
+    }
+    .message span {
+      display: block;
+    }
+    .message .info {
+      font-size: 12px;
+      color: #777;
+      margin-bottom: 5px;
     }
     .message.user {
       background-color: #007bff;
@@ -99,15 +155,23 @@
       align-self: flex-start;
       border-radius: 25px 25px 25px 0;
     }
+    .message .timestamp {
+      font-size: 10px;
+      color: #777;
+    }
+
+    /* Zone d'entrée et bouton d'envoi */
     .input-container {
       display: flex;
       align-items: center;
+      margin-top: 20px;
     }
     input[type="text"] {
       flex: 1;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
+      font-size: 16px;
     }
     button {
       margin-left: 10px;
@@ -118,110 +182,187 @@
       background-color: #007bff;
       color: #fff;
       cursor: pointer;
+      display: flex;
+      align-items: center;
     }
     button:hover {
       background-color: #0056b3;
     }
+
+    /* Historique */
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f1f1f1;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .history-item span {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+    .download-icon {
+      cursor: pointer;
+      font-size: 18px;
+      color: #007bff;
+    }
+    .download-icon:hover {
+      color: #0056b3;
+    }
+
+    /* Section pour les conversations filtrées par date */
+    .filters {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="sidebar">
+    <!-- Barre latérale -->
+    <div class="sidebar hidden" id="sidebar">
       <h2>Menu</h2>
       <ul>
         <li onclick="showChat()"><i class="fas fa-comment-alt"></i> Chat</li>
-        <li onclick="showNewChat()"><i class="fas fa-comments"></i> Nouveau Chat</li>
+        <li onclick="showNewChat()"><i class="fas fa-comments"></i> Nouveau Chat</li> <!-- Nouvelle entrée ici -->
         <li onclick="showHistory()"><i class="fas fa-history"></i> Historique</li>
       </ul>
     </div>
 
+    <!-- Menu rétractable -->
     <button class="menu-toggle" onclick="toggleMenu()">☰</button>
 
-    <div class="chat-container">
+    <!-- Zone de chat -->
+    <div class="chat-container" id="chatPage">
       <div class="header">
         <h1>Zakia</h1>
-        <button onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
       </div>
       <div class="messages" id="messages"></div>
       <div class="input-container">
-        <button onclick="uploadDocument()"><i class="fas fa-paperclip"></i></button>
-        <button onclick="startVoiceRecognition()"><i class="fas fa-microphone"></i></button>
+        <input type="file" id="fileInput" hidden accept=".txt,.pdf,.avi,.zip">
+        <button id="uploadButton" onclick="uploadDocument()"><i class="fas fa-paperclip"></i></button>
+        <button id="voiceButton" onclick="startVoiceRecognition()"><i class="fas fa-microphone"></i></button>
         <input type="text" id="userInput" placeholder="Posez une question..." onkeydown="handleKey(event)">
         <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-        <button onclick="saveConversation()"><i class="fas fa-save"></i></button>
+        <button onclick="saveConversation()"><i class="fas fa-save"></i></button> <!-- Icone Sauvegarder à côté de l'envoi -->
+      </div>
+    </div>
+
+    <!-- Historique de conversation -->
+    <div class="chat-container" id="historyPage" style="display: none;">
+      <div class="filters">
+        <div><button>Tout</button><button>Aujourd'hui</button><button>Cette semaine</button><button>Ce mois-ci</button></div>
+        <div><button onclick="downloadHistory()"><i class="fas fa-download"></i></button></div>
+      </div>
+      <div class="history-item">
+        <span>Chat du 11 décembre 2024</span><i class="fas fa-download download-icon"></i>
+      </div>
+      <div class="history-item">
+        <span>Chat du 10 décembre 2024</span><i class="fas fa-download download-icon"></i>
       </div>
     </div>
   </div>
 
   <script>
+    // Fonction pour réinitialiser le chat et créer un nouveau chat
+    function showNewChat() {
+      document.getElementById("messages").innerHTML = ''; // Effacer les messages
+    }
+
+    // Fonction pour afficher la page de chat
+    function showChat() {
+      document.getElementById("chatPage").style.display = "block";
+      document.getElementById("historyPage").style.display = "none";
+    }
+
+    // Fonction pour afficher l'historique
+    function showHistory() {
+      document.getElementById("chatPage").style.display = "none";
+      document.getElementById("historyPage").style.display = "block";
+    }
+
+    // Toggle entre afficher et masquer la barre latérale
+    function toggleMenu() {
+      document.getElementById("sidebar").classList.toggle("hidden");
+    }
+
+    // Fonction pour activer/désactiver le mode sombre
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+
+    // Fonction pour envoyer le message
     function sendMessage() {
       let input = document.getElementById("userInput");
       let message = input.value.trim();
       if (message) {
+        // Ajouter le message de l'utilisateur à l'écran
         let messageElement = document.createElement("div");
         messageElement.classList.add("message", "user");
-        messageElement.innerHTML = `<span>Vous:</span> ${message}`;
-        document.getElementById("messages").prepend(messageElement);
-        input.value = "";
+        messageElement.innerHTML = `<span class="info">Vous:</span><span>${message}</span>`;
+        document.getElementById("messages").appendChild(messageElement);
+        input.value = ""; // Effacer le champ après l'envoi
+        input.focus();
 
-        setTimeout(() => {
-          let botMessage = generateBotResponse(message);
+        // Réponse de Zakia avec effet de frappe
+        setTimeout(function() {
+          let botMessage = generateBotResponse(message); // Générer la réponse du bot
           typeWriter(botMessage);
-        }, 1000);
+        }, 1000); // délai de 1 seconde pour simuler la réponse du bot
       }
     }
 
+    // Fonction pour générer une réponse simulée par le bot
     function generateBotResponse(userMessage) {
+      // Logique simple pour la simulation
       if (userMessage.toLowerCase().includes("bonjour")) {
-        return "Bonjour ! Comment puis-je vous aider ?";
+        return "Bonjour ! Comment puis-je vous aider aujourd'hui ?";
       } else if (userMessage.toLowerCase().includes("comment ça va")) {
-        return "Je vais bien, merci ! Et vous ?";
+        return "Je vais bien, merci de demander ! Et vous ?";
       } else {
-        return "Désolé, je n'ai pas compris. Pouvez-vous reformuler ?";
+        return "Désolé, je n'ai pas compris votre question. Pouvez-vous reformuler ?";
       }
     }
 
+    // Fonction pour simuler la frappe caractère par caractère
     function typeWriter(text) {
       let index = 0;
       let botMessageElement = document.createElement("div");
       botMessageElement.classList.add("message", "llm");
-      botMessageElement.innerHTML = `<span>Zakia:</span> <span id="typing"></span>`;
-      document.getElementById("messages").prepend(botMessageElement);
+      botMessageElement.innerHTML = `<span class="info">Zakia:</span><span id="typing"></span>`;
+      document.getElementById("messages").appendChild(botMessageElement);
 
       function addCharacter() {
         if (index < text.length) {
           document.getElementById("typing").innerHTML += text.charAt(index);
           index++;
-          setTimeout(addCharacter, 50);
+          setTimeout(addCharacter, 50); // Vitesse de la frappe : 50ms par caractère
         }
       }
+
       addCharacter();
+      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight; // Faire défiler vers le bas
     }
 
+    // Fonction pour gérer la saisie au clavier
     function handleKey(event) {
       if (event.key === "Enter") {
         sendMessage();
       }
     }
 
+    // Fonction pour sauvegarder la conversation
     function saveConversation() {
-      const chatMessages = document.getElementById("messages").innerText;
-      const blob = new Blob([chatMessages], { type: 'text/plain' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "conversation.txt";
-      link.click();
-    }
-    
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark-mode");
-    }
-
-    function toggleMenu() {
-      document.querySelector(".sidebar").classList.toggle("hidden");
+      // Logique pour sauvegarder la conversation
+      alert("Conversation sauvegardée !");
     }
   </script>
 </body>
 </html>
-
-
