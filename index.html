@@ -237,21 +237,7 @@
         <button id="send-button">Envoyer</button>
         <button id="save-page-button">Télécharger la conversation</button>
     </div>
-    // Fonction pour simuler la frappe caractère par caractère
-    function typeWriter(text) {
-      let index = 0;
-      let botMessageElement = document.createElement("div");
-      botMessageElement.classList.add("message", "llm");
-      botMessageElement.innerHTML = `<span class="info">Zakia:</span><span id="typing"></span>`;
-      document.getElementById("messages").appendChild(botMessageElement);
 
-      function addCharacter() {
-        if (index < text.length) {
-          document.getElementById("typing").innerHTML += text.charAt(index);
-          index++;
-          setTimeout(addCharacter, 50); // Vitesse de la frappe : 50ms par caractère
-        }
-      }
     <script>
         const responses = {
             "bonjour": {
