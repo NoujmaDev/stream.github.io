@@ -1,368 +1,462 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zakia - Chat avec LLM</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Lien pour Font Awesome -->
-  <style>
-    /* Styles globaux */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f9;
-      color: #333;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    .dark-mode {
-      background-color: #1a1a1a;
-      color: #f1f1f1;
-    }
-
-    /* Layout principal */
-    .container {
-      display: flex;
-      height: 100vh;
-    }
-
-    /* Barre latérale */
-    .sidebar {
-      width: 250px;
-      background: #f7f7f7;
-      color: #333;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s;
-    }
-    .sidebar.hidden {
-      transform: translateX(-100%);
-    }
-    .sidebar h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 20px;
-    }
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-    .sidebar ul li {
-      padding: 10px;
-      background: #e0e0e0;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      text-align: center;
-    }
-    .sidebar ul li:hover {
-      background: #c0c0c0;
-    }
-
-    /* Menu rétractable */
-    .menu-toggle {
-      background: #007bff;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      font-size: 20px;
-      cursor: pointer;
-      border-radius: 50%;
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 1000;
-    }
-
-    /* Zone de chat */
-    .chat-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 40px 30px;
-      overflow: hidden;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 32px;
-    }
-    .dark-mode-toggle {
-      cursor: pointer;
-      font-size: 20px;
-      padding: 8px;
-      border: none;
-      border-radius: 5px;
-      background-color: #f4f4f9;
-      color: #333;
-    }
-    .dark-mode .dark-mode-toggle {
-      background-color: #333;
-      color: #f1f1f1;
-    }
-
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 20px;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background: #f9f9f9;
-      height: calc(100vh - 220px); /* Ajuster la taille du chat */
-    }
-    .dark-mode .messages {
-      background: #2c2c2c;
-      border-color: #444;
-    }
-
-    /* Bulles de message */
-    .message {
-      margin-bottom: 15px;
-      display: flex;
-      flex-direction: column;
-      font-size: 14px;
-      padding: 10px;
-      border-radius: 25px;
-      max-width: 70%;
-    }
-    .dark-mode .message {
-      color: #f1f1f1;
-    }
-    .message span {
-      display: block;
-    }
-    .message .info {
-      font-size: 12px;
-      color: #777;
-      margin-bottom: 5px;
-    }
-    .message.user {
-      background-color: #007bff;
-      color: white;
-      align-self: flex-end;
-      border-radius: 25px 25px 0 25px;
-    }
-    .message.llm {
-      background-color: #e9e9eb;
-      align-self: flex-start;
-      border-radius: 25px 25px 25px 0;
-    }
-    .message .timestamp {
-      font-size: 10px;
-      color: #777;
-    }
-
-    /* Zone d'entrée et bouton d'envoi */
-    .input-container {
-      display: flex;
-      align-items: center;
-      margin-top: 20px;
-    }
-    input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    button {
-      margin-left: 10px;
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      background-color: #007bff;
-      color: #fff;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    /* Historique */
-    .history-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: #f1f1f1;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-    .history-item span {
-      flex-grow: 1;
-      margin-right: 10px;
-    }
-    .download-icon {
-      cursor: pointer;
-      font-size: 18px;
-      color: #007bff;
-    }
-    .download-icon:hover {
-      color: #0056b3;
-    }
-
-    /* Section pour les conversations filtrées par date */
-    .filters {
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-    }
-
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lynx Mind AI</title>
+    <style>
+        /* Style général */
+        body {
+            display: flex;
+            font-family: "Montserrat", sans-serif;
+            margin: 0;
+            height: 100vh;
+            background-color: #f4f4f9;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark-mode {
+            background-color: #181818;
+            color: #f4f4f9;
+        }
+        #stream-board {
+            width: 350px;
+            border-right: 1px solid #ddd;
+            padding: 10px;
+            background-color: #ffffff;
+            overflow-y: auto;
+            transition: background-color 0.3s;
+        }
+        .dark-mode #stream-board {
+            background-color: #2a2a2a;
+            border-color: #444;
+        }
+        #chatbot {
+            flex: 1;
+            background-color: #ffffff;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .dark-mode #chatbot {
+            background-color: #2a2a2a;
+            border-color: #444;
+        }
+        #chat {
+            background-color: #e9ecef;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s;
+        }
+        .dark-mode #chat {
+            background-color: #444;
+        }
+        .message {
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 5px;
+            width: fit-content;
+            max-width: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+        }
+        .message.user {
+            background-color: #d1e7dd;
+            align-self: flex-start;
+        }
+        .dark-mode .message.user {
+            background-color: #3a3a3a;
+            color: #f4f4f9;
+        }
+        .message.bot {
+            background-color: #d3f9d8;
+            color: #333;
+            align-self: flex-end;
+        }
+        .dark-mode .message.bot {
+            background-color: #5a5a5a;
+            color: #f4f4f9;
+        }
+        .message p {
+            margin: 0;
+        }
+        .meta {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .dark-mode .meta {
+            color: #ccc;
+        }
+        .user-tag, .bot-tag {
+            padding: 5px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 0.8em;
+        }
+        .user-tag {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-start;
+        }
+        .bot-tag {
+            background-color: #28a745;
+            color: white;
+            align-self: flex-end;
+        }
+        #user-input {
+            background-color: #e9ecef;
+            width: calc(100% - 100px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: inline-block;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .dark-mode #user-input {
+            background-color: #444;
+            border-color: #666;
+            color: #f4f4f9;
+        }
+        #username-input {
+            width: calc(100% - 100px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .dark-mode #username-input {
+            background-color: #444;
+            border-color: #666;
+            color: #f4f4f9;
+        }
+        #send-button, #stream-board-submit {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        #save-page-button {
+            display: block;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #toggle-dark-mode {
+            margin: 10px;
+            padding: 10px;
+            background-color: transparent;
+            color: #007bff;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        #stream-board-posts {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column; /* Garde l'ordre normal pour afficher du plus ancien au plus récent */
+        }
+        .stream-board-post {
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        .dark-mode .stream-board-post {
+            background-color: #333;
+            border-color: #444;
+        }
+        .stream-board-post:last-child {
+            border-bottom: none;
+        }
+        .stream-board-meta {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .dark-mode .stream-board-meta {
+            color: #ccc;
+        }
+        #stream-board-input {
+            width: calc(100% - 110px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+            background-color: #e9ecef;
+        }
+        .dark-mode #stream-board-input {
+            background-color: #444;
+            border-color: #666;
+            color: #f4f4f9;
+        }
+        /* Styles pour l'icône de lune/soleil */
+        .dark-mode #toggle-dark-mode:before {
+            content: '☀️'; /* Icône du soleil */
+        }
+        #toggle-dark-mode:before {
+            content: '🌙'; /* Icône de la lune */
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Barre latérale -->
-    <div class="sidebar hidden" id="sidebar">
-      <h2>Menu</h2>
-      <ul>
-        <li onclick="showChat()"><i class="fas fa-comment-alt"></i> Chat</li>
-        <li onclick="showNewChat()"><i class="fas fa-comments"></i> Nouveau Chat</li> <!-- Nouvelle entrée ici -->
-        <li onclick="showHistory()"><i class="fas fa-history"></i> Historique</li>
-      </ul>
+    <div id="stream-board">
+        <h2>Stream Board</h2>
+        <div id="stream-board-posts"></div>
+        <input type="text" id="stream-board-input" placeholder="Écrivez un message pour le Stream Board...">
+        <button id="stream-board-submit">Envoyer</button>
     </div>
 
-    <!-- Menu rétractable -->
-    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-
-    <!-- Zone de chat -->
-    <div class="chat-container" id="chatPage">
-      <div class="header">
-        <h1>Zakia</h1>
-        <button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
-      </div>
-      <div class="messages" id="messages"></div>
-      <div class="input-container">
-        <input type="file" id="fileInput" hidden accept=".txt,.pdf,.avi,.zip">
-        <button id="uploadButton" onclick="uploadDocument()"><i class="fas fa-paperclip"></i></button>
-        <button id="voiceButton" onclick="startVoiceRecognition()"><i class="fas fa-microphone"></i></button>
-        <input type="text" id="userInput" placeholder="Posez une question..." onkeydown="handleKey(event)">
-        <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-        <button onclick="saveConversation()"><i class="fas fa-save"></i></button> <!-- Icone Sauvegarder à côté de l'envoi -->
-      </div>
+    <div id="chatbot">
+        <button id="toggle-dark-mode"></button>
+        <input type="text" id="username-input" placeholder="Choisissez votre nom d'utilisateur...">
+        <div id="chat"></div>
+        <input type="text" id="user-input" placeholder="Écrivez un message...">
+        <button id="send-button">Envoyer</button>
+        <button id="save-page-button">Télécharger la conversation</button>
     </div>
 
-    <!-- Historique de conversation -->
-    <div class="chat-container" id="historyPage" style="display: none;">
-      <div class="filters">
-        <div><button>Tout</button><button>Aujourd'hui</button><button>Cette semaine</button><button>Ce mois-ci</button></div>
-        <div><button onclick="downloadHistory()"><i class="fas fa-download"></i></button></div>
-      </div>
-      <div class="history-item">
-        <span>Chat du 11 décembre 2024</span><i class="fas fa-download download-icon"></i>
-      </div>
-      <div class="history-item">
-        <span>Chat du 10 décembre 2024</span><i class="fas fa-download download-icon"></i>
-      </div>
-    </div>
-  </div>
+    <script>
+        const responses = {
+            "bonjour": {
+                response: "Bonjour ! Comment puis-je vous aider aujourd'hui ? N'hésitez pas à poser vos questions.",
+                keywords: ["bonjour", "salut"]
+            },
+            "comment ça va ?": {
+                response: "Je vais bien, merci ! Et vous ?",
+                keywords: ["comment ça va", "ça va", "comment vas-tu"]
+            },
+            "au revoir": {
+                response: "Au revoir ! N'hésitez pas à revenir si vous avez d'autres questions !",
+                keywords: ["au revoir", "à bientôt"]
+            },
+            "help": {
+                response: "Je suis ici pour vous aider avec vos questions sur l'emploi. Posez-moi votre question !",
+                keywords: ["aide", "assistance", "soutien"]
+            },
+            "qu'est-ce que l'ia ?": {
+                response: "L'IA signifie intelligence artificielle, qui fait référence à des systèmes informatiques capables d'effectuer des tâches qui nécessitent normalement l'intelligence humaine.",
+                keywords: ["intelligence artificielle", "IA", "machine learning"]
+            },
+            "comment chercher un emploi à bruxelles ?": {
+                response: "Pour chercher un emploi à Bruxelles, vous pouvez utiliser des sites comme Indeed, LinkedIn, et les agences d'emploi locales. Bonne chance dans votre recherche !",
+                keywords: ["emploi à bruxelles", "chercher un emploi", "job bruxelles"]
+            },
+            // Ajoutez ici 30 questions et réponses sur les astuces pour trouver un emploi à Bruxelles et en Belgique
+            "quels sont les meilleurs sites pour l'emploi ?": {
+                response: "Les meilleurs sites pour l'emploi en Belgique incluent Indeed, Monster, Jobat, et LinkedIn, qui sont très utilisés par les recruteurs.",
+                keywords: ["meilleurs sites", "emploi", "Belgique", "recruteurs", "Indeed", "LinkedIn"]
+            },
+            "comment rédiger un cv attractif ?": {
+                response: "Pour un CV attractif, mettez en avant vos compétences et expériences pertinentes, et utilisez un format clair et professionnel.",
+                keywords: ["CV", "attractif", "compétences", "expériences", "format", "professionnel"]
+            },
+            "où trouver des offres d'emploi ?": {
+                response: "Les offres d'emploi peuvent être trouvées sur des sites spécialisés, dans les journaux, et via des réseaux professionnels comme LinkedIn.",
+                keywords: ["offres d'emploi", "sites spécialisés", "journaux", "réseaux professionnels", "LinkedIn", "recherche"]
+            },
+            "quels secteurs recrutent en belgique ?": {
+                response: "En Belgique, les secteurs qui recrutent incluent la technologie, la santé, l'ingénierie et le secteur bancaire, avec de nombreuses opportunités.",
+                keywords: ["secteurs recrutent", "Belgique", "technologie", "santé", "ingénierie", "opportunités"]
+            },
+            "comment se préparer à un entretien ?": {
+                response: "Préparez-vous en vous renseignant sur l'entreprise, en pratiquant vos réponses, et en posant des questions pertinentes à l'entretien.",
+                keywords: ["préparer", "entretien", "entreprise", "réponses", "questions", "pratiques"]
+            },
+            "quelles compétences sont recherchées ?": {
+                response: "Les compétences recherchées incluent la communication, le travail en équipe, l'analyse de données, et des compétences techniques spécifiques.",
+                keywords: ["compétences recherchées", "communication", "travail en équipe", "analyse de données", "techniques", "spécifiques"]
+            },
+            "comment créer un réseau professionnel ?": {
+                response: "Pour créer un réseau, participez à des événements, rejoignez des groupes LinkedIn, et interagissez avec des professionnels de votre domaine.",
+                keywords: ["réseau professionnel", "événements", "groupes LinkedIn", "interagir", "professionnels", "domaine"]
+            },
+            "quelles sont les erreurs à éviter ?": {
+                response: "Évitez les fautes d'orthographe dans votre CV, de ne pas personnaliser votre lettre de motivation, et d'être trop vague sur vos compétences.",
+                keywords: ["erreurs à éviter", "fautes d'orthographe", "CV", "lettre de motivation", "personnaliser", "compétences"]
+            },
+            "comment suivre vos candidatures ?": {
+                response: "Pour suivre vos candidatures, utilisez un tableau de suivi ou une application, et gardez une trace des réponses des employeurs.",
+                keywords: ["suivre candidatures", "tableau", "application", "trace", "réponses", "employeurs"]
+            },
+            "quelles formations suivre ?": {
+                response: "Les formations en digital, en gestion de projet, et en langues étrangères sont très appréciées par les recruteurs en Belgique.",
+                keywords: ["formations", "digital", "gestion de projet", "langues étrangères", "appréciées", "recruteurs"]
+            },
+            "comment valoriser son expérience ?": {
+                response: "Valorisez votre expérience en utilisant des exemples concrets et en expliquant comment vous avez apporté de la valeur dans vos précédents emplois.",
+                keywords: ["valoriser expérience", "exemples concrets", "apporté", "valeur", "précédents", "emplois"]
+            },
+            "comment se démarquer des autres candidats ?": {
+                response: "Pour vous démarquer, mettez en avant vos compétences uniques et votre passion pour le poste lors des entretiens.",
+                keywords: ["se démarquer", "candidats", "compétences uniques", "passion", "poste", "entretiens"]
+            },
+            "où trouver des conseils pour la recherche d'emploi ?": {
+                response: "Vous pouvez trouver des conseils sur des blogs professionnels, des sites spécialisés, et dans des livres sur la recherche d'emploi.",
+                keywords: ["conseils", "recherche d'emploi", "blogs", "sites spécialisés", "livres", "trouver"]
+            },
+            "quelles sont les tendances de l'emploi en 2024 ?": {
+                response: "Les tendances de l'emploi en 2024 incluent le télétravail, l'automatisation, et une forte demande pour les compétences numériques.",
+                keywords: ["tendances emploi", "2024", "télétravail", "automatisation", "demande", "compétences numériques"]
+            },
+            "comment négocier son salaire ?": {
+                response: "Pour négocier votre salaire, faites des recherches sur les salaires du marché et préparez des arguments convaincants.",
+                keywords: ["négocier salaire", "recherches", "marché", "arguments", "convaincants", "préparer"]
+            },
+            "quelles ressources pour améliorer son CV ?": {
+                response: "Utilisez des outils en ligne comme Canva ou des modèles disponibles sur des sites spécialisés pour améliorer votre CV.",
+                keywords: ["ressources", "améliorer CV", "outils en ligne", "Canva", "modèles", "sites spécialisés"]
+            },
+            "comment se préparer à des tests de sélection ?": {
+                response: "Préparez-vous aux tests de sélection en vous exerçant avec des exemples disponibles en ligne et en vous familiarisant avec le format.",
+                keywords: ["préparer tests", "sélection", "exemples", "en ligne", "familiariser", "format"]
+            },
+            "quelles questions poser lors d'un entretien ?": {
+                response: "Posez des questions sur la culture d'entreprise, les opportunités de carrière et les attentes pour le poste.",
+                keywords: ["questions entretien", "culture d'entreprise", "opportunités", "carrière", "attentes", "poste"]
+            },
+            "comment améliorer son profil LinkedIn ?": {
+                response: "Améliorez votre profil LinkedIn en ajoutant une photo professionnelle, des compétences, et en publiant du contenu pertinent.",
+                keywords: ["améliorer profil", "LinkedIn", "photo professionnelle", "compétences", "publier", "contenu pertinent"]
+            },
+            "quelles stratégies pour le networking ?": {
+                response: "Utilisez des plateformes comme LinkedIn, assistez à des événements, et demandez des recommandations pour élargir votre réseau.",
+                keywords: ["stratégies", "networking", "plateformes", "LinkedIn", "événements", "recommandations"]
+            },
+            "comment trouver un stage ?": {
+                response: "Cherchez des stages via des sites spécialisés, des écoles, et en contactant directement les entreprises de votre domaine.",
+                keywords: ["trouver stage", "sites spécialisés", "écoles", "contacter", "entreprises", "domaine"]
+            },
+            "comment faire un suivi après un entretien ?": {
+                response: "Envoyez un email de remerciement en réaffirmant votre intérêt pour le poste et en mentionnant des points discutés.",
+                keywords: ["suivi entretien", "email de remerciement", "réaffirmer", "intérêt", "poste", "points discutés"]
+            },
+            "quelles certifications sont valorisées ?": {
+                response: "Les certifications en gestion de projet, marketing digital et en informatique sont souvent valorisées par les employeurs en Belgique.",
+                keywords: ["certifications", "valorisées", "gestion de projet", "marketing digital", "informatique", "employeurs"]
+            },
+            "comment utiliser les réseaux sociaux pour chercher un emploi ?": {
+                response: "Utilisez les réseaux sociaux pour suivre des entreprises, rejoindre des groupes professionnels et partager votre expertise.",
+                keywords: ["réseaux sociaux", "chercher emploi", "entreprises", "groupes professionnels", "partager", "expertise"]
+            },
+            "quels sont les atouts d'un bon CV ?": {
+                response: "Un bon CV doit être clair, concis, et mettre en valeur vos compétences, expériences, et réalisations pertinentes.",
+                keywords: ["atouts", "bon CV", "clair", "concise", "compétences", "réalisations"]
+            },
+            "comment faire une bonne lettre de motivation ?": {
+                response: "Rédigez une lettre de motivation personnalisée, en expliquant pourquoi vous êtes le candidat idéal pour le poste visé.",
+                keywords: ["lettre de motivation", "personnalisée", "expliquer", "candidat idéal", "poste", "visé"]
+            },
+            "comment préparer une liste de références ?": {
+                response: "Préparez une liste de références en contactant des anciens employeurs ou collègues, et demandez leur permission.",
+                keywords: ["préparer liste", "références", "contactant", "anciens employeurs", "collègues", "permission"]
+            },
+            "comment éviter le burn-out dans la recherche d'emploi ?": {
+                response: "Prenez des pauses régulières, restez organisé, et établissez un équilibre entre votre recherche d'emploi et vos loisirs.",
+                keywords: ["éviter burn-out", "recherche emploi", "pauses", "organisé", "équilibre", "loisirs"]
+            },
+            "quels sont les avantages du travail à distance ?": {
+                response: "Le travail à distance offre de la flexibilité, un meilleur équilibre travail-vie personnelle, et des économies sur les trajets.",
+                keywords: ["avantages", "travail à distance", "flexibilité", "équilibre", "économies", "trajets"]
+            },
+        };
 
-  <script>
-    // Fonction pour réinitialiser le chat et créer un nouveau chat
-    function showNewChat() {
-      document.getElementById("messages").innerHTML = ''; // Effacer les messages
-    }
+        document.addEventListener("DOMContentLoaded", () => {
+            const chat = document.getElementById("chat");
+            const streamBoardPosts = document.getElementById("stream-board-posts");
+            const userInput = document.getElementById("user-input");
+            const usernameInput = document.getElementById("username-input");
+            const sendButton = document.getElementById("send-button");
+            const streamBoardInput = document.getElementById("stream-board-input");
+            const streamBoardSubmit = document.getElementById("stream-board-submit");
+            const toggleDarkMode = document.getElementById("toggle-dark-mode");
+            let darkMode = false;
 
-    // Fonction pour afficher la page de chat
-    function showChat() {
-      document.getElementById("chatPage").style.display = "block";
-      document.getElementById("historyPage").style.display = "none";
-    }
+            function addMessageToChat(sender, message) {
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("message", sender);
+                const metaElement = document.createElement("div");
+                metaElement.classList.add("meta");
+                metaElement.innerText = new Date().toLocaleTimeString();
+                const textElement = document.createElement("p");
+                textElement.innerText = message;
+                messageElement.appendChild(metaElement);
+                messageElement.appendChild(textElement);
+                chat.appendChild(messageElement);
+                chat.scrollTop = chat.scrollHeight; // Scroll to bottom
+            }
 
-    // Fonction pour afficher l'historique
-    function showHistory() {
-      document.getElementById("chatPage").style.display = "none";
-      document.getElementById("historyPage").style.display = "block";
-    }
+            function addMessageToStreamBoard(sender, message) {
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("stream-board-post");
+                const metaElement = document.createElement("div");
+                metaElement.classList.add("stream-board-meta");
+                metaElement.innerText = `${sender} - ${new Date().toLocaleTimeString()}`;
+                const textElement = document.createElement("p");
+                textElement.innerText = message;
+                messageElement.appendChild(metaElement);
+                messageElement.appendChild(textElement);
+                streamBoardPosts.appendChild(messageElement);
+                streamBoardPosts.scrollTop = streamBoardPosts.scrollHeight; // Scroll to bottom
+            }
 
-    // Toggle entre afficher et masquer la barre latérale
-    function toggleMenu() {
-      document.getElementById("sidebar").classList.toggle("hidden");
-    }
+            sendButton.addEventListener("click", () => {
+                const username = usernameInput.value.trim() || "Utilisateur";
+                const userMessage = userInput.value.trim();
+                if (userMessage) {
+                    addMessageToChat("user", userMessage);
+                    addMessageToStreamBoard("Utilisateur", userMessage);
+                    userInput.value = "";
 
-    // Fonction pour activer/désactiver le mode sombre
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark-mode");
-    }
+                    // Réponse de Lynx Mind
+                    const response = Object.keys(responses).find(key => userMessage.toLowerCase().includes(key.toLowerCase()));
+                    if (response) {
+                        const botMessage = responses[response].response;
+                        addMessageToChat("bot", botMessage);
+                        addMessageToStreamBoard("Lynx Mind", botMessage);
+                    } else {
+                        const botMessage = "Je ne comprends pas votre question. Pouvez-vous reformuler ?";
+                        addMessageToChat("bot", botMessage);
+                        addMessageToStreamBoard("Lynx Mind", botMessage);
+                    }
+                }
+            });
 
-    // Fonction pour envoyer le message
-    function sendMessage() {
-      let input = document.getElementById("userInput");
-      let message = input.value.trim();
-      if (message) {
-        // Ajouter le message de l'utilisateur à l'écran
-        let messageElement = document.createElement("div");
-        messageElement.classList.add("message", "user");
-        messageElement.innerHTML = `<span class="info">Vous:</span><span>${message}</span>`;
-        document.getElementById("messages").appendChild(messageElement);
-        input.value = ""; // Effacer le champ après l'envoi
-        input.focus();
+            streamBoardSubmit.addEventListener("click", () => {
+                const streamMessage = streamBoardInput.value.trim();
+                if (streamMessage) {
+                    addMessageToStreamBoard("Utilisateur", streamMessage);
+                    streamBoardInput.value = "";
+                }
+            });
 
-        // Réponse de Zakia avec effet de frappe
-        setTimeout(function() {
-          let botMessage = generateBotResponse(message); // Générer la réponse du bot
-          typeWriter(botMessage);
-        }, 1000); // délai de 1 seconde pour simuler la réponse du bot
-      }
-    }
-
-    // Fonction pour générer une réponse simulée par le bot
-    function generateBotResponse(userMessage) {
-      // Logique simple pour la simulation
-      if (userMessage.toLowerCase().includes("bonjour")) {
-        return "Bonjour ! Comment puis-je vous aider aujourd'hui ?";
-      } else if (userMessage.toLowerCase().includes("comment ça va")) {
-        return "Je vais bien, merci de demander ! Et vous ?";
-      } else {
-        return "Désolé, je n'ai pas compris votre question. Pouvez-vous reformuler ?";
-      }
-    }
-
-    // Fonction pour simuler la frappe caractère par caractère
-    function typeWriter(text) {
-      let index = 0;
-      let botMessageElement = document.createElement("div");
-      botMessageElement.classList.add("message", "llm");
-      botMessageElement.innerHTML = `<span class="info">Zakia:</span><span id="typing"></span>`;
-      document.getElementById("messages").appendChild(botMessageElement);
-
-      function addCharacter() {
-        if (index < text.length) {
-          document.getElementById("typing").innerHTML += text.charAt(index);
-          index++;
-          setTimeout(addCharacter, 50); // Vitesse de la frappe : 50ms par caractère
-        }
-      }
-
-      addCharacter();
-      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight; // Faire défiler vers le bas
-    }
-
-    // Fonction pour gérer la saisie au clavier
-    function handleKey(event) {
-      if (event.key === "Enter") {
-        sendMessage();
-      }
-    }
-
-    // Fonction pour sauvegarder la conversation
-    function saveConversation() {
-      // Logique pour sauvegarder la conversation
-      alert("Conversation sauvegardée !");
-    }
-  </script>
+            toggleDarkMode.addEventListener("click", () => {
+                darkMode = !darkMode;
+                document.body.classList.toggle("dark-mode", darkMode);
+            });
+        });
+    </script>
 </body>
 </html>
